@@ -29,32 +29,39 @@ export async function POST(req: Request) {
   }
 
   const recentMessages = messages.slice(-20);
-
-  try {
-    const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
-      contents: recentMessages.map((m) => ({
-        role: m.role === "assistant" ? "model" : "user",
-        parts: [{ text: m.content }],
-      })),
-      config: {
-        systemInstruction: `You are a friendly, knowledgeable real estate assistant answering questions about one specific property listing for a prospective buyer who scanned a QR code at the property. Answer only using the listing details below. If asked something the listing doesn't cover (e.g. school ratings, HOA fees not listed), say you don't have that detail and suggest contacting the listing agent. Keep answers concise and conversational.
+  const request = {
+    model: "gemini-3.5-flash",
+    contents: recentMessages.map((m) => ({
+      role: m.role === "assistant" ? "model" : "user",
+      parts: [{ text: m.content }],
+    })),
+    config: {
+      systemInstruction: `You are a friendly, knowledgeable real estate assistant answering questions about one specific property listing for a prospective buyer who scanned a QR code at the property. Answer only using the listing details below. If asked something the listing doesn't cover (e.g. school ratings, HOA fees not listed), say you don't have that detail and suggest contacting the listing agent. Keep answers concise and conversational.
 
 ${listingToContext(listing)}`,
-      },
-    });
+    },
+  };
 
-    const reply = response.text ?? "";
-
-    return NextResponse.json({ reply });
-  } catch (err) {
-    return NextResponse.json(
-      {
-        error: `Assistant error: ${
-          err instanceof Error ? err.message : "Unexpected error contacting the assistant."
-        }`,
-      },
-      { status: 500 }
-    );
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const response = await ai.models.generateContent(request);
+      const reply = response.text ?? "";
+      return NextResponse.json({ reply });
+    } catch (err) {
+      const isOverloaded =
+        err instanceof Error && /"code":503|UNAVAILABLE/.test(err.message);
+      if (isOverloaded && attempt === 0) {
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+        continue;
+      }
+      return NextResponse.json(
+        {
+          error: `Assistant error: ${
+            err instanceof Error ? err.message : "Unexpected error contacting the assistant."
+          }`,
+        },
+        { status: 500 }
+      );
+    }
   }
 }
