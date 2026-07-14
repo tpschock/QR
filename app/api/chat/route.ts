@@ -30,7 +30,7 @@ export async function POST(req: Request) {
 
   const recentMessages = messages.slice(-20);
   const request = {
-    model: "gemini-3.5-flash",
+    model: "gemini-3.1-flash-lite",
     contents: recentMessages.map((m) => ({
       role: m.role === "assistant" ? "model" : "user",
       parts: [{ text: m.content }],
@@ -42,7 +42,8 @@ ${listingToContext(listing)}`,
     },
   };
 
-  for (let attempt = 0; attempt < 2; attempt++) {
+  const maxAttempts = 3;
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
     try {
       const response = await ai.models.generateContent(request);
       const reply = response.text ?? "";
@@ -50,8 +51,8 @@ ${listingToContext(listing)}`,
     } catch (err) {
       const isOverloaded =
         err instanceof Error && /"code":503|UNAVAILABLE/.test(err.message);
-      if (isOverloaded && attempt === 0) {
-        await new Promise((resolve) => setTimeout(resolve, 1500));
+      if (isOverloaded && attempt < maxAttempts - 1) {
+        await new Promise((resolve) => setTimeout(resolve, 1500 * (attempt + 1)));
         continue;
       }
       return NextResponse.json(
