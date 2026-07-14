@@ -15,14 +15,14 @@ export default function ListingCard({ listing }: { listing: Listing }) {
         <p className="text-sm text-stone-500">{listing.city}</p>
 
           <div className="mt-2 flex items-center justify-between">
-          <p className="text-xl font-bold text-emerald-700">{listing.price}</p>
+          <p className="text-xl font-bold text-navy-700">{listing.price}</p>
           <p className="text-sm text-stone-500">{listing.sqft.toLocaleString()} sqft</p>
         </div>
 
         <button
           type="button"
           onClick={() => setExpanded((v) => !v)}
-          className="mt-2 flex w-full items-center justify-between border-t border-stone-100 pt-2 text-sm font-medium text-emerald-700"
+          className="mt-2 flex w-full items-center justify-between border-t border-stone-100 pt-2 text-sm font-medium text-navy-700"
         >
           <span>{expanded ? "Hide" : "See"} full details</span>
           <span aria-hidden>{expanded ? "▲" : "▼"}</span>
@@ -35,7 +35,7 @@ export default function ListingCard({ listing }: { listing: Listing }) {
             <ul className="space-y-1">
               {listing.features.map((feature, i) => (
                 <li key={i} className="flex items-start gap-2 text-stone-700">
-                  <span className="text-emerald-600">•</span>
+                  <span className="text-navy-600">•</span>
                   <span>{feature}</span>
                 </li>
               ))}
