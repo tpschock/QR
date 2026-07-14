@@ -3,10 +3,7 @@ export interface Listing {
   address: string;
   city: string;
   price: string;
-  beds: number;
-  baths: number;
   sqft: number;
-  yearBuilt: number;
   description: string;
   features: string[];
   agentName: string;
