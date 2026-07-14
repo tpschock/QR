@@ -5,7 +5,6 @@ export interface Listing {
   price: string;
   beds: number;
   baths: number;
-  baydoors: number;
   sqft: number;
   yearBuilt: number;
   description: string;
