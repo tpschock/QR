@@ -19,7 +19,7 @@ export default function Home() {
             >
               <p className="font-semibold text-stone-900">{listing.address}</p>
               <p className="text-sm text-stone-500">{listing.city}</p>
-              <p className="mt-1 font-bold text-emerald-700">{listing.price}</p>
+              <p className="mt-1 font-bold text-navy-700">{listing.price}</p>
             </Link>
           </li>
         ))}
