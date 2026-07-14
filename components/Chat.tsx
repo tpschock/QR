@@ -56,21 +56,15 @@ export default function Chat({ listing }: { listing: Listing }) {
   }
 
   return (
-    <div className="flex h-full flex-col rounded-2xl border border-stone-200 bg-white shadow-sm">
-      <div className="border-b border-stone-100 px-4 py-3">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-stone-500">
-          Ask about this home
-        </h2>
-      </div>
-
-      <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
+    <div className="flex min-h-0 flex-1 flex-col bg-white">
+      <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4">
         {messages.map((m, i) => (
           <div
             key={i}
             className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
           >
             <div
-              className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${
+              className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-base leading-snug ${
                 m.role === "user"
                   ? "bg-emerald-700 text-white"
                   : "bg-stone-100 text-stone-800"
@@ -82,23 +76,27 @@ export default function Chat({ listing }: { listing: Listing }) {
         ))}
         {loading && (
           <div className="flex justify-start">
-            <div className="rounded-2xl bg-stone-100 px-3 py-2 text-sm text-stone-400">
+            <div className="rounded-2xl bg-stone-100 px-4 py-2.5 text-base text-stone-400">
               Thinking…
             </div>
           </div>
         )}
         {error && (
-          <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
+          <div className="rounded-lg bg-red-50 px-4 py-2.5 text-sm text-red-600">
             {error}
           </div>
         )}
         <div ref={listEndRef} />
       </div>
 
-      <form onSubmit={sendMessage} className="flex gap-2 border-t border-stone-100 p-3">
+      <form
+        onSubmit={sendMessage}
+        className="flex gap-2 border-t border-stone-200 bg-white p-3"
+        style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
+      >
         <input
-          className="flex-1 rounded-full border border-stone-200 px-4 py-2 text-sm outline-none focus:border-emerald-500"
-          placeholder="e.g. Is the primary suite upstairs?"
+          className="flex-1 rounded-full border border-stone-300 px-4 py-3 text-base outline-none focus:border-emerald-500"
+          placeholder="Ask about this home…"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           disabled={loading}
@@ -106,7 +104,7 @@ export default function Chat({ listing }: { listing: Listing }) {
         <button
           type="submit"
           disabled={loading || !input.trim()}
-          className="rounded-full bg-emerald-700 px-4 py-2 text-sm font-medium text-white disabled:opacity-40"
+          className="rounded-full bg-emerald-700 px-5 py-3 text-base font-medium text-white disabled:opacity-40"
         >
           Send
         </button>
