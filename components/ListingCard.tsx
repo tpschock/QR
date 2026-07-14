@@ -16,8 +16,8 @@ export default function ListingCard({ listing }: { listing: Listing }) {
 
         <div className="mt-2 flex items-center justify-between">
           <p className="text-xl font-bold text-emerald-700">{listing.price}</p>
-          <p className="text-sm text-stone-500">
-            {listing.beds} bd · {listing.baths} ba · {listing.sqft.toLocaleString()} sqft
+          <p className="text-sm text-stone-500"> 
+            {listing.sqft.toLocaleString()} sqft
           </p>
         </div>
 
