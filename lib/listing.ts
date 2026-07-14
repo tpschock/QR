@@ -83,10 +83,7 @@ export function listingToContext(listing: Listing): string {
   return `Property listing details:
 Address: ${listing.address}, ${listing.city}
 Price: ${listing.price}
-Bedrooms: ${listing.beds}
-Bathrooms: ${listing.baths}
 Square footage: ${listing.sqft} sqft
-Year built: ${listing.yearBuilt}
 Description: ${listing.description}
 Features: ${listing.features.join(", ")}
 Listing agent: ${listing.agentName}, ${listing.agentPhone}, ${listing.agentEmail}`;
