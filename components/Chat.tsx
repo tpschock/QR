@@ -66,7 +66,7 @@ export default function Chat({ listing }: { listing: Listing }) {
             <div
               className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-base leading-snug ${
                 m.role === "user"
-                  ? "bg-emerald-700 text-white"
+                  ? "bg-navy-700 text-white"
                   : "bg-stone-100 text-stone-800"
               }`}
             >
@@ -95,7 +95,7 @@ export default function Chat({ listing }: { listing: Listing }) {
         style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
       >
         <input
-          className="flex-1 rounded-full border border-stone-300 px-4 py-3 text-base outline-none focus:border-emerald-500"
+          className="flex-1 rounded-full border border-stone-300 px-4 py-3 text-base outline-none focus:border-navy-500"
           placeholder="Ask about this home…"
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -104,7 +104,7 @@ export default function Chat({ listing }: { listing: Listing }) {
         <button
           type="submit"
           disabled={loading || !input.trim()}
-          className="rounded-full bg-emerald-700 px-5 py-3 text-base font-medium text-white disabled:opacity-40"
+          className="rounded-full bg-navy-700 px-5 py-3 text-base font-medium text-white disabled:opacity-40"
         >
           Send
         </button>
