@@ -6,7 +6,7 @@ summary and a prominent AI chat panel to ask questions. Listing details are
 hardcoded in `lib/listing.ts` — there's no in-browser editing, since this page
 is meant for the public, not the agent. The chat calls a server-side API
 route (never the client) to talk to the Gemini API, so your API key never
-reaches the browser.
+reaches the browser,
 
 ## Getting a free API key
 
