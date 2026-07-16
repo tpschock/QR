@@ -1,8 +1,10 @@
-import Link from "next/link";
-import { listings } from "@/lib/listing";
+import { getListings } from "@/lib/listings-data";
 import BrandHeader from "@/components/BrandHeader";
+import PropertyDirectory from "@/components/PropertyDirectory";
 
 export default function Home() {
+  const listings = getListings();
+
   return (
     <main className="min-h-dvh bg-white">
       <BrandHeader />
@@ -12,21 +14,7 @@ export default function Home() {
           Each listing has its own page and QR code — visitors scanning a
           sign go straight to that property's chat.
         </p>
-
-        <ul className="mt-6 space-y-3">
-          {listings.map((listing) => (
-            <li key={listing.slug}>
-              <Link
-                href={`/${listing.slug}`}
-                className="block rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
-              >
-                <p className="font-semibold text-slate-900">{listing.address}</p>
-                <p className="text-sm text-slate-500">{listing.city}</p>
-                <p className="mt-1 font-bold text-brand-navy">{listing.price}</p>
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <PropertyDirectory listings={listings} />
       </div>
     </main>
   );
