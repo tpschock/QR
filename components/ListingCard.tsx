@@ -1,10 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { Listing } from "@/lib/listing";
+import {
+  Listing,
+  getListingFields,
+  getPrimaryStat,
+  getSecondaryStat,
+} from "@/lib/listing";
 
 export default function ListingCard({ listing }: { listing: Listing }) {
   const [expanded, setExpanded] = useState(false);
+  const fields = getListingFields(listing);
+  const primaryStat = getPrimaryStat(listing);
+  const secondaryStat = getSecondaryStat(listing);
+  const hasDetails = fields.length > 0 || listing.agents.length > 0;
 
   return (
     <div className="border-b border-slate-200 bg-white">
@@ -15,37 +24,49 @@ export default function ListingCard({ listing }: { listing: Listing }) {
         <p className="text-sm text-slate-500">{listing.city}</p>
 
         <div className="mt-2 flex items-center justify-between">
-          <p className="text-xl font-bold text-brand-navy">{listing.price}</p>
-          <p className="text-sm text-slate-500">{listing.sqft.toLocaleString()} sqft</p>
+          <p className="text-xl font-bold text-brand-navy">
+            {primaryStat ?? listing.listingStatus}
+          </p>
+          {secondaryStat && <p className="text-sm text-slate-500">{secondaryStat}</p>}
         </div>
 
-        <button
-          type="button"
-          onClick={() => setExpanded((v) => !v)}
-          className="mt-2 flex w-full items-center justify-between border-t border-slate-100 pt-2 text-sm font-medium text-brand-navy"
-        >
-          <span>{expanded ? "Hide" : "See"} full details</span>
-          <span aria-hidden>{expanded ? "▲" : "▼"}</span>
-        </button>
+        {hasDetails && (
+          <button
+            type="button"
+            onClick={() => setExpanded((v) => !v)}
+            className="mt-2 flex w-full items-center justify-between border-t border-slate-100 pt-2 text-sm font-medium text-brand-navy"
+          >
+            <span>{expanded ? "Hide" : "See"} full details</span>
+            <span aria-hidden>{expanded ? "▲" : "▼"}</span>
+          </button>
+        )}
 
         {expanded && (
           <div className="mt-3 space-y-3 text-sm">
-            <p className="text-slate-700">{listing.description}</p>
+            {fields.length > 0 && (
+              <dl className="grid grid-cols-2 gap-x-4 gap-y-2">
+                {fields.map((f) => (
+                  <div key={f.label}>
+                    <dt className="text-xs uppercase tracking-wide text-slate-400">
+                      {f.label}
+                    </dt>
+                    <dd className="text-slate-800">{f.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            )}
 
-            <ul className="space-y-1">
-              {listing.features.map((feature, i) => (
-                <li key={i} className="flex items-start gap-2 text-slate-700">
-                  <span className="text-brand-navy-light">•</span>
-                  <span>{feature}</span>
-                </li>
-              ))}
-            </ul>
-
-            <div className="border-t border-slate-100 pt-3 text-slate-600">
-              <p className="font-medium text-slate-800">{listing.agentName}</p>
-              <p>{listing.agentPhone}</p>
-              <p>{listing.agentEmail}</p>
-            </div>
+            {listing.agents.length > 0 && (
+              <div className="space-y-2 border-t border-slate-100 pt-3 text-slate-600">
+                {listing.agents.map((agent, i) => (
+                  <div key={i}>
+                    <p className="font-medium text-slate-800">{agent.name}</p>
+                    {agent.phone && <p>{agent.phone}</p>}
+                    {agent.email && <p>{agent.email}</p>}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
