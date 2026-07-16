@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getListingBySlug } from "@/lib/listing";
+import { getListingBySlug } from "@/lib/listings-data";
 import BrandHeader from "@/components/BrandHeader";
 import ListingCard from "@/components/ListingCard";
 import Chat from "@/components/Chat";
