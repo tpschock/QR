@@ -41,6 +41,7 @@ export interface Listing {
   salesPerSf?: number;
   noi?: number;
   agents: Agent[];
+  notes?: string;
 }
 
 interface FieldDef {
@@ -145,10 +146,14 @@ export function listingToContext(listing: Listing): string {
         .join("; ")
     : "Not yet assigned — direct the buyer to contact our office";
 
+    const notesSection = listing.notes
+    ? `\n\nAdditional marketing details (from the property flier):\n${listing.notes}`
+    : "";
+
   return `Property listing details:
 Name/Address: ${listing.address}
 City: ${listing.city}
 Status: ${listing.listingStatus}
 ${fieldLines}
-Listing agent(s): ${agentLines}`;
+Listing agent(s): ${agentLines}${notesSection}`;
 }
