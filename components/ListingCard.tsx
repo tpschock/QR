@@ -13,7 +13,7 @@ export default function ListingCard({ listing }: { listing: Listing }) {
   const fields = getListingFields(listing);
   const primaryStat = getPrimaryStat(listing);
   const secondaryStat = getSecondaryStat(listing);
-  const hasDetails = fields.length > 0 || listing.agents.length > 0;
+  const hasDetails = fields.length > 0 || listing.agents.length > 0 || !!listing.notes;
 
   return (
     <div className="border-b border-slate-200 bg-white">
@@ -43,6 +43,10 @@ export default function ListingCard({ listing }: { listing: Listing }) {
 
         {expanded && (
           <div className="mt-3 space-y-3 text-sm">
+            {listing.notes && (
+              <p className="whitespace-pre-line text-slate-700">{listing.notes}</p>
+            )}
+
             {fields.length > 0 && (
               <dl className="grid grid-cols-2 gap-x-4 gap-y-2">
                 {fields.map((f) => (
