@@ -12,7 +12,7 @@ export default function Chat({ listing }: { listing: Listing }) {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: "assistant",
-      content: `Hi! I can answer questions about ${listing.address}. Ask me about the price, layout, features, or how to schedule a tour.`,
+            content: `Hi! I can answer questions about ${listing.address}. Ask me about the price, layout, features, or how to schedule a tour.`,
     },
   ]);
   const [input, setInput] = useState("");
