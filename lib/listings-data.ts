@@ -5,6 +5,7 @@ import { Agent, Listing } from "./listing";
 
 const PROPERTIES_CSV_PATH = path.join(process.cwd(), "data", "properties.csv");
 const AGENTS_CSV_PATH = path.join(process.cwd(), "data", "agents.csv");
+const NOTES_DIR = path.join(process.cwd(), "data", "notes");
 
 function slugify(address: string): string {
   return (
@@ -47,6 +48,13 @@ function loadAgentLookup(): Map<string, Agent> {
   }
 
   return map;
+}
+
+function loadNotes(slug: string): string | undefined {
+  const notesPath = path.join(NOTES_DIR, `${slug}.md`);
+  if (!fs.existsSync(notesPath)) return undefined;
+  const content = fs.readFileSync(notesPath, "utf-8").trim();
+  return content || undefined;
 }
 
 function resolveAgents(
@@ -124,6 +132,7 @@ function loadListings(): Listing[] {
         salesPerSf: num(row["Sales (per SF)"]),
         noi: num(row["Net Operating Income"]),
         agents: resolveAgents(row["Lead Broker"], agentLookup),
+        notes: loadNotes(slug),
       };
 
       return listing;
