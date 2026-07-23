@@ -8,15 +8,29 @@ import {
   getSecondaryStat,
 } from "@/lib/listing";
 
+function telHref(phone: string): string {
+  return `tel:${phone.replace(/[^\d+]/g, "")}`;
+}
+
 export default function ListingCard({ listing }: { listing: Listing }) {
   const [expanded, setExpanded] = useState(false);
   const fields = getListingFields(listing);
   const primaryStat = getPrimaryStat(listing);
   const secondaryStat = getSecondaryStat(listing);
   const hasDetails = fields.length > 0 || listing.agents.length > 0 || !!listing.notes;
+  const primaryAgent = listing.agents[0];
 
   return (
     <div className="border-b border-slate-200 bg-white">
+      {listing.photoUrl && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={listing.photoUrl}
+          alt={listing.address}
+          className="h-48 w-full object-cover"
+        />
+      )}
+
       <div className="px-4 py-3">
         <h1 className="text-lg font-semibold leading-tight text-slate-900">
           {listing.address}
@@ -29,6 +43,27 @@ export default function ListingCard({ listing }: { listing: Listing }) {
           </p>
           {secondaryStat && <p className="text-sm text-slate-500">{secondaryStat}</p>}
         </div>
+
+        {primaryAgent && (primaryAgent.phone || primaryAgent.email) && (
+          <div className="mt-3 flex gap-2">
+            {primaryAgent.phone && (
+              <a
+                href={telHref(primaryAgent.phone)}
+                className="flex-1 rounded-full bg-brand-navy px-4 py-2.5 text-center text-sm font-medium text-white"
+              >
+                Call {primaryAgent.name.split(",")[0]}
+              </a>
+            )}
+            {primaryAgent.email && (
+              <a
+                href={`mailto:${primaryAgent.email}`}
+                className="flex-1 rounded-full border border-brand-navy px-4 py-2.5 text-center text-sm font-medium text-brand-navy"
+              >
+                Email
+              </a>
+            )}
+          </div>
+        )}
 
         {hasDetails && (
           <button
@@ -65,8 +100,16 @@ export default function ListingCard({ listing }: { listing: Listing }) {
                 {listing.agents.map((agent, i) => (
                   <div key={i}>
                     <p className="font-medium text-slate-800">{agent.name}</p>
-                    {agent.phone && <p>{agent.phone}</p>}
-                    {agent.email && <p>{agent.email}</p>}
+                    {agent.phone && (
+                      <a href={telHref(agent.phone)} className="block text-brand-navy underline">
+                        {agent.phone}
+                      </a>
+                    )}
+                    {agent.email && (
+                      <a href={`mailto:${agent.email}`} className="block text-brand-navy underline">
+                        {agent.email}
+                      </a>
+                    )}
                   </div>
                 ))}
               </div>
