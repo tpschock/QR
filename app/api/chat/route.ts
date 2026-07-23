@@ -11,7 +11,36 @@ interface ChatMessage {
   content: string;
 }
 
+// Simple in-memory sliding-window limiter, keyed by client IP. This is a
+// single serverless instance's view only (not shared across instances), but
+// it's enough to blunt basic abuse of the shared free-tier Gemini key
+// without adding external infra like Vercel KV/Upstash.
+const RATE_LIMIT_WINDOW_MS = 5 * 60 * 1000;
+const RATE_LIMIT_MAX_REQUESTS = 30;
+const requestLog = new Map<string, number[]>();
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const recent = (requestLog.get(ip) ?? []).filter(
+    (t) => now - t < RATE_LIMIT_WINDOW_MS
+  );
+  recent.push(now);
+  requestLog.set(ip, recent);
+  return recent.length > RATE_LIMIT_MAX_REQUESTS;
+}
+
+function getClientIp(req: Request): string {
+  return req.headers.get("x-forwarded-for")?.split(",")[0].trim() || "unknown";
+}
+
 export async function POST(req: Request) {
+  if (isRateLimited(getClientIp(req))) {
+    return NextResponse.json(
+      { error: "Too many messages — please wait a moment and try again." },
+      { status: 429 }
+    );
+  }
+
   let body: { messages?: ChatMessage[]; listing?: Listing };
   try {
     body = await req.json();
