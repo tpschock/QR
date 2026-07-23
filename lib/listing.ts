@@ -9,6 +9,7 @@ export interface Listing {
   address: string;
   city: string;
   listingStatus: string;
+  photoUrl?: string;
   buildingType?: string;
   buildingStatus?: string;
   leaseStructure?: string;
