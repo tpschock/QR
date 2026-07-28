@@ -23,7 +23,7 @@ const NEAR_BOTTOM_THRESHOLD_PX = 80;
 // which can look like whole sentences popping in at once. These decouple
 // on-screen reveal speed from network timing — raise REVEAL_CHARS_PER_TICK
 // or lower REVEAL_INTERVAL_MS to speed the typing effect up, and vice versa.
-const REVEAL_CHARS_PER_TICK = 2;
+const REVEAL_CHARS_PER_TICK = 3;
 const REVEAL_INTERVAL_MS = 30;
 
 function greeting(listing: Listing): ChatMessage {
