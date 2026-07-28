@@ -8,23 +8,20 @@ you leave blank just won't come up.
 
 ## About us
 
-Focus Commercial Real Estate is [one or two sentences: who you are, how long
-you've been in business, what makes you different].
+Focus Commercial Real Estate is full-service commercial real estate brokerage firm. Through multiple market cycles over multiple decades, we have used instinct, analytics, and work ethic to competently guide dozens of Fortune 500 clients, private companies, large and small investors, and property owners in a manner that has allowed them to strategically accomplish their real estate goals.
 
 ## Services
 
-[List what your brokerage does, e.g. property sales, leasing, tenant
-representation, property management, investment sales, site selection.]
+Commercial Real Estate Brokerage (Buy, Sell, Lease), Property Management, Investment Sales, Commercial Real Estate Development, Residential Portfolio Management, Commercial Real Estate Strategy Consulting, Tenant Advisory, Self Storage.
 
 ## Service area
 
-[Cities/counties/region you primarily serve, e.g. Northwest Arkansas —
-Bentonville, Rogers, Springdale, Fayetteville.]
+Focused in Northwest Arkansas — Bentonville, Rogers, Springdale, Fayetteville, but active across the state 
 
 ## Office
 
-[Office address, main phone number, general email, website URL.]
+5512 W Walsh Ln, Suite 201, Rogers AR 72758, 479.254.7000, info@focuscregroup.com, www.focuscregroup.com
 
 ## Hours
 
-[Office hours, if useful for visitors to know.]
+8-5
