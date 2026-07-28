@@ -1,7 +1,8 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Listing } from "@/lib/listing";
+import { renderMarkdown } from "@/lib/markdown";
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -16,24 +17,76 @@ const QUICK_REPLIES = [
 ];
 
 const REQUEST_TIMEOUT_MS = 20000;
+const NEAR_BOTTOM_THRESHOLD_PX = 80;
+
+function greeting(listing: Listing): ChatMessage {
+  return {
+    role: "assistant",
+    content: `Hi! I can answer questions about ${listing.address}. Ask me about the price, specs, or how to schedule a tour.`,
+  };
+}
 
 export default function Chat({ listing }: { listing: Listing }) {
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      role: "assistant",
-      content: `Hi! I can answer questions about ${listing.address}. Ask me about the price, specs, or how to schedule a tour.`,
-    },
-  ]);
+  const storageKey = `chat:${listing.slug}`;
+
+  const [messages, setMessages] = useState<ChatMessage[]>([greeting(listing)]);
+  const [hydrated, setHydrated] = useState(false);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [retryMessages, setRetryMessages] = useState<ChatMessage[] | null>(null);
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+
   const listEndRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const stickToBottomRef = useRef(true);
+
+  // Restore a saved conversation for this property after mount (not during
+  // the initial render) so the server- and client-rendered HTML always match.
+  useEffect(() => {
+    try {
+      const saved = window.sessionStorage.getItem(storageKey);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) setMessages(parsed);
+      }
+    } catch {
+      // Corrupt or unavailable storage — just start fresh.
+    }
+    setHydrated(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    try {
+      window.sessionStorage.setItem(storageKey, JSON.stringify(messages));
+    } catch {
+      // Storage full/unavailable (e.g. private browsing) — not critical.
+    }
+  }, [messages, hydrated, storageKey]);
+
+  function handleScroll() {
+    const el = containerRef.current;
+    if (!el) return;
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    stickToBottomRef.current = distanceFromBottom < NEAR_BOTTOM_THRESHOLD_PX;
+  }
+
+  function scrollToBottom(force = false) {
+    if (!force && !stickToBottomRef.current) return;
+    requestAnimationFrame(() =>
+      listEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    );
+  }
 
   async function postToApi(nextMessages: ChatMessage[]) {
     setLoading(true);
     setError(null);
     setRetryMessages(null);
+
+    const assistantIndex = nextMessages.length;
+    setMessages([...nextMessages, { role: "assistant", content: "" }]);
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
@@ -47,12 +100,34 @@ export default function Chat({ listing }: { listing: Listing }) {
       });
 
       if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.error || `Request failed (${res.status})`);
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody.error || `Request failed (${res.status})`);
+      }
+      if (!res.body) throw new Error("No response body.");
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let accumulated = "";
+      let receivedAny = false;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunkText = decoder.decode(value, { stream: true });
+        if (!chunkText) continue;
+        receivedAny = true;
+        accumulated += chunkText;
+        setMessages((prev) => {
+          const copy = [...prev];
+          copy[assistantIndex] = { role: "assistant", content: accumulated };
+          return copy;
+        });
+        scrollToBottom();
       }
 
-      const data = await res.json();
-      setMessages([...nextMessages, { role: "assistant", content: data.reply }]);
+      if (!receivedAny) {
+        throw new Error("The assistant didn't return a response. Please try again.");
+      }
     } catch (err) {
       const isTimeout = err instanceof DOMException && err.name === "AbortError";
       setError(
@@ -63,12 +138,11 @@ export default function Chat({ listing }: { listing: Listing }) {
           : "Something went wrong."
       );
       setRetryMessages(nextMessages);
+      setMessages((prev) => prev.slice(0, assistantIndex));
     } finally {
       clearTimeout(timeout);
       setLoading(false);
-      requestAnimationFrame(() =>
-        listEndRef.current?.scrollIntoView({ behavior: "smooth" })
-      );
+      scrollToBottom(true);
     }
   }
 
@@ -77,6 +151,8 @@ export default function Chat({ listing }: { listing: Listing }) {
     const nextMessages: ChatMessage[] = [...messages, { role: "user", content: text }];
     setMessages(nextMessages);
     setInput("");
+    stickToBottomRef.current = true;
+    scrollToBottom(true);
     postToApi(nextMessages);
   }
 
@@ -89,29 +165,67 @@ export default function Chat({ listing }: { listing: Listing }) {
     if (retryMessages) postToApi(retryMessages);
   }
 
+  async function copyMessage(text: string, index: number) {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedIndex(index);
+      setTimeout(() => setCopiedIndex((cur) => (cur === index ? null : cur)), 1500);
+    } catch {
+      // Clipboard API unavailable/denied — not critical, just skip feedback.
+    }
+  }
+
   return (
     <div className="flex min-h-0 flex-1 flex-col bg-white">
       <div
+        ref={containerRef}
+        onScroll={handleScroll}
         className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4"
         aria-live="polite"
         aria-relevant="additions"
       >
-        {messages.map((m, i) => (
-          <div
-            key={i}
-            className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
-          >
+        {messages.map((m, i) => {
+          const isLast = i === messages.length - 1;
+          const isStreamingEmpty =
+            loading && isLast && m.role === "assistant" && m.content === "";
+          const showCopy = m.role === "assistant" && m.content && !(loading && isLast);
+
+          return (
             <div
-              className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-base leading-snug ${
-                m.role === "user"
-                  ? "bg-brand-navy text-white"
-                  : "bg-slate-100 text-slate-800"
-              }`}
+              key={i}
+              className={`flex flex-col ${m.role === "user" ? "items-end" : "items-start"}`}
             >
-              {m.content}
+              <div
+                className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-base leading-snug ${
+                  m.role === "user"
+                    ? "bg-brand-navy text-white"
+                    : "bg-slate-100 text-slate-800"
+                }`}
+              >
+                {isStreamingEmpty ? (
+                  <span className="flex items-center gap-1 py-0.5" aria-label="Assistant is typing">
+                    <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-400 [animation-delay:-0.3s]" />
+                    <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-400 [animation-delay:-0.15s]" />
+                    <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-400" />
+                  </span>
+                ) : m.role === "assistant" ? (
+                  renderMarkdown(m.content)
+                ) : (
+                  m.content
+                )}
+              </div>
+              {showCopy && (
+                <button
+                  type="button"
+                  onClick={() => copyMessage(m.content, i)}
+                  className="mt-1 text-xs text-slate-400"
+                >
+                  {copiedIndex === i ? "Copied" : "Copy"}
+                </button>
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
 
         {messages.length === 1 && (
           <div className="flex flex-wrap gap-2 pt-1">
@@ -125,19 +239,6 @@ export default function Chat({ listing }: { listing: Listing }) {
                 {q}
               </button>
             ))}
-          </div>
-        )}
-
-        {loading && (
-          <div className="flex justify-start">
-            <div
-              className="flex items-center gap-1 rounded-2xl bg-slate-100 px-4 py-3"
-              aria-label="Assistant is typing"
-            >
-              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-400 [animation-delay:-0.3s]" />
-              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-400 [animation-delay:-0.15s]" />
-              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-400" />
-            </div>
           </div>
         )}
 
