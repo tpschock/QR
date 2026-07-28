@@ -6,6 +6,7 @@ import { Agent, Listing } from "./listing";
 const PROPERTIES_CSV_PATH = path.join(process.cwd(), "data", "properties.csv");
 const AGENTS_CSV_PATH = path.join(process.cwd(), "data", "agents.csv");
 const NOTES_DIR = path.join(process.cwd(), "data", "notes");
+const COMPANY_INFO_PATH = path.join(process.cwd(), "data", "company-info.md");
 
 function slugify(address: string): string {
   return (
@@ -55,6 +56,23 @@ function loadNotes(slug: string): string | undefined {
   if (!fs.existsSync(notesPath)) return undefined;
   const content = fs.readFileSync(notesPath, "utf-8").trim();
   return content || undefined;
+}
+
+function loadCompanyInfo(): string | undefined {
+  if (!fs.existsSync(COMPANY_INFO_PATH)) return undefined;
+  const content = fs.readFileSync(COMPANY_INFO_PATH, "utf-8").trim();
+  return content || undefined;
+}
+
+let cachedCompanyInfo: string | undefined;
+let companyInfoLoaded = false;
+
+export function getCompanyInfo(): string | undefined {
+  if (!companyInfoLoaded) {
+    cachedCompanyInfo = loadCompanyInfo();
+    companyInfoLoaded = true;
+  }
+  return cachedCompanyInfo;
 }
 
 function resolveAgents(
