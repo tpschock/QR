@@ -8,6 +8,14 @@ export default function FocusLogo({ className = "" }: { className?: string }) {
             <stop offset="55%" stopColor="#264A70" />
             <stop offset="100%" stopColor="#122236" />
           </radialGradient>
+          <linearGradient id="focus-shimmer" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="0" />
+            <stop offset="50%" stopColor="#ffffff" stopOpacity="0.35" />
+            <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+          </linearGradient>
+          <clipPath id="focus-clip">
+            <circle cx="14" cy="14" r="13" />
+          </clipPath>
         </defs>
         <circle cx="14" cy="14" r="13" fill="url(#focus-navy)" />
         <path
@@ -17,9 +25,19 @@ export default function FocusLogo({ className = "" }: { className?: string }) {
           strokeWidth="1.5"
           strokeLinecap="round"
         />
+        <g clipPath="url(#focus-clip)">
+          <rect
+            x="-6"
+            y="-6"
+            width="8"
+            height="40"
+            fill="url(#focus-shimmer)"
+            className="animate-shimmer motion-reduce:hidden"
+          />
+        </g>
       </svg>
       <div className="leading-none">
-        <div className="font-serif text-base font-bold tracking-wide text-brand-navy">
+        <div className="font-serif text-base font-bold uppercase tracking-wide text-brand-navy">
           Focus
         </div>
         <div className="mt-0.5 text-[9px] font-semibold uppercase tracking-widest text-brand-grey">
