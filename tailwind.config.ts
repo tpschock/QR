@@ -18,6 +18,16 @@ const config: Config = {
       fontFamily: {
         serif: ["Georgia", "Cambria", "Times New Roman", "serif"],
       },
+      keyframes: {
+        shimmer: {
+          "0%": { transform: "translateX(-20px) skewX(-20deg)" },
+          "35%": { transform: "translateX(20px) skewX(-20deg)" },
+          "100%": { transform: "translateX(20px) skewX(-20deg)" },
+        },
+      },
+      animation: {
+        shimmer: "shimmer 3.5s ease-in-out infinite",
+      },
     },
   },
   plugins: [],
