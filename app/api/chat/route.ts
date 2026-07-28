@@ -76,12 +76,14 @@ ${companySection}${listingToContext(listing)}`,
     },
   };
 
+  // Retries only cover getting the stream started — once tokens are flowing,
+  // a mid-stream drop just ends the response early rather than restarting it.
   const maxAttempts = 3;
+  let stream: Awaited<ReturnType<typeof ai.models.generateContentStream>> | undefined;
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     try {
-      const response = await ai.models.generateContent(request);
-      const reply = response.text ?? "";
-      return NextResponse.json({ reply });
+      stream = await ai.models.generateContentStream(request);
+      break;
     } catch (err) {
       const isOverloaded =
         err instanceof Error && /"code":503|UNAVAILABLE/.test(err.message);
@@ -99,4 +101,24 @@ ${companySection}${listingToContext(listing)}`,
       );
     }
   }
+
+  const encoder = new TextEncoder();
+  const body_ = new ReadableStream({
+    async start(controller) {
+      try {
+        for await (const chunk of stream!) {
+          const text = chunk.text;
+          if (text) controller.enqueue(encoder.encode(text));
+        }
+      } catch {
+        // Best effort — the client keeps whatever text streamed before the drop.
+      } finally {
+        controller.close();
+      }
+    },
+  });
+
+  return new Response(body_, {
+    headers: { "Content-Type": "text/plain; charset=utf-8" },
+  });
 }
