@@ -1,6 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 import { NextResponse } from "next/server";
 import { Listing, listingToContext } from "@/lib/listing";
+import { getCompanyInfo } from "@/lib/listings-data";
 
 export const runtime = "nodejs";
 
@@ -58,6 +59,10 @@ export async function POST(req: Request) {
   }
 
   const recentMessages = messages.slice(-20);
+  const companyInfo = getCompanyInfo();
+  const companySection = companyInfo
+    ? `About the brokerage:\n${companyInfo}\n\n`
+    : "";
   const request = {
     model: "gemini-3.1-flash-lite",
     contents: recentMessages.map((m) => ({
@@ -65,9 +70,9 @@ export async function POST(req: Request) {
       parts: [{ text: m.content }],
     })),
     config: {
-      systemInstruction: `You are a friendly, knowledgeable real estate assistant answering questions about one specific property listing for a prospective buyer who scanned a QR code at the property. Answer only using the listing details below. If asked something the listing doesn't cover (e.g. school ratings, HOA fees not listed), say you don't have that detail and suggest contacting the listing agent. Keep answers concise and conversational.
+      systemInstruction: `You are a friendly, knowledgeable real estate assistant answering questions about one specific property listing for a prospective buyer who scanned a QR code at the property. Answer only using the company and listing details below. If asked something they don't cover (e.g. school ratings, HOA fees not listed), say you don't have that detail and suggest contacting the listing agent. Keep answers concise and conversational.
 
-${listingToContext(listing)}`,
+${companySection}${listingToContext(listing)}`,
     },
   };
 
