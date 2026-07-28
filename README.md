@@ -96,6 +96,17 @@ The listing agent's phone/email are shown as tap-to-call/email buttons right
 under the price on each property page (not just buried in "full details"),
 so a visitor on their phone can reach the broker in one tap.
 
+## Adding general company information
+
+`data/company-info.md` holds information about the brokerage itself (who you
+are, services, service area, office/contact, hours) rather than any single
+property — it's given to the AI on every chat, on every property page, in
+addition to that property's own details. Open the file and replace the
+bracketed placeholders with real content; leave a section blank and the AI
+just won't mention it. This is separate from `data/notes/<slug>.md`, which is
+per-property — use `company-info.md` for anything true across your whole
+brokerage.
+
 ## Adding marketing flier content
 
 The Salesforce export only has structured spec fields — no room for the
@@ -165,6 +176,8 @@ limiter.
   **fill this in with real contact info**
 - `data/notes/<slug>.md` — optional freeform extra content per property
   (from marketing fliers, etc.) — only needed for properties that have one
+- `data/company-info.md` — general info about the brokerage, given to the AI
+  on every chat regardless of property — **fill this in with real content**
 - `lib/listings-data.ts` — reads and parses both CSVs, joins broker contact
   info onto each listing, filters out blank-status rows, auto-generates
   slugs
