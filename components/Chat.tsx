@@ -19,6 +19,13 @@ const QUICK_REPLIES = [
 const REQUEST_TIMEOUT_MS = 20000;
 const NEAR_BOTTOM_THRESHOLD_PX = 80;
 
+// The network delivers text in bursts (however Gemini happens to chunk it),
+// which can look like whole sentences popping in at once. These decouple
+// on-screen reveal speed from network timing — raise REVEAL_CHARS_PER_TICK
+// or lower REVEAL_INTERVAL_MS to speed the typing effect up, and vice versa.
+const REVEAL_CHARS_PER_TICK = 1;
+const REVEAL_INTERVAL_MS = 30;
+
 function greeting(listing: Listing): ChatMessage {
   return {
     role: "assistant",
@@ -40,6 +47,13 @@ export default function Chat({ listing }: { listing: Listing }) {
   const listEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const stickToBottomRef = useRef(true);
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   // Restore a saved conversation for this property after mount (not during
   // the initial render) so the server- and client-rendered HTML always match.
@@ -91,6 +105,51 @@ export default function Chat({ listing }: { listing: Listing }) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
+    // Text arrives from the network in whatever bursts Gemini happens to
+    // chunk it into (targetText). A separate ticker reveals it on-screen at
+    // a fixed pace (revealedLength), so display speed doesn't depend on
+    // network timing.
+    let targetText = "";
+    let revealedLength = 0;
+    let networkDone = false;
+    let revealTimer: ReturnType<typeof setInterval> | null = null;
+
+    function showRevealed() {
+      if (!mountedRef.current) return;
+      setMessages((prev) => {
+        const copy = [...prev];
+        copy[assistantIndex] = { role: "assistant", content: targetText.slice(0, revealedLength) };
+        return copy;
+      });
+      scrollToBottom();
+    }
+
+    function finish() {
+      if (revealTimer) {
+        clearInterval(revealTimer);
+        revealTimer = null;
+      }
+      if (!mountedRef.current) return;
+      setLoading(false);
+      scrollToBottom(true);
+    }
+
+    function startRevealTimer() {
+      if (revealTimer) return;
+      revealTimer = setInterval(() => {
+        if (!mountedRef.current) {
+          if (revealTimer) clearInterval(revealTimer);
+          return;
+        }
+        if (revealedLength < targetText.length) {
+          revealedLength = Math.min(targetText.length, revealedLength + REVEAL_CHARS_PER_TICK);
+          showRevealed();
+        } else if (networkDone) {
+          finish();
+        }
+      }, REVEAL_INTERVAL_MS);
+    }
+
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
@@ -107,7 +166,6 @@ export default function Chat({ listing }: { listing: Listing }) {
 
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
-      let accumulated = "";
       let receivedAny = false;
 
       while (true) {
@@ -116,19 +174,21 @@ export default function Chat({ listing }: { listing: Listing }) {
         const chunkText = decoder.decode(value, { stream: true });
         if (!chunkText) continue;
         receivedAny = true;
-        accumulated += chunkText;
-        setMessages((prev) => {
-          const copy = [...prev];
-          copy[assistantIndex] = { role: "assistant", content: accumulated };
-          return copy;
-        });
-        scrollToBottom();
+        targetText += chunkText;
+        startRevealTimer();
       }
+      networkDone = true;
 
       if (!receivedAny) {
         throw new Error("The assistant didn't return a response. Please try again.");
       }
+      // If the reveal ticker never needed to start (or already caught up),
+      // finish immediately — otherwise it'll detect networkDone itself.
+      if (revealedLength >= targetText.length) {
+        finish();
+      }
     } catch (err) {
+      if (revealTimer) clearInterval(revealTimer);
       const isTimeout = err instanceof DOMException && err.name === "AbortError";
       setError(
         isTimeout
@@ -139,10 +199,9 @@ export default function Chat({ listing }: { listing: Listing }) {
       );
       setRetryMessages(nextMessages);
       setMessages((prev) => prev.slice(0, assistantIndex));
+      setLoading(false);
     } finally {
       clearTimeout(timeout);
-      setLoading(false);
-      scrollToBottom(true);
     }
   }
 
