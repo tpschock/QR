@@ -140,6 +140,8 @@ properties from `data/properties.csv`.
    auto-detects the Next.js project, no config needed.
 3. Under **Environment Variables**, add:
    - `GEMINI_API_KEY` — your key from [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
+   - Optionally, `DIRECTORY_USER` and `DIRECTORY_PASSWORD` — see
+     [Restricting the directory page](#restricting-the-directory-page) below
 4. Deploy. You'll get a live URL like `your-project.vercel.app`.
 
 ### Deploying via CLI instead of GitHub
@@ -158,6 +160,25 @@ For each property, generate a QR code pointing at its specific URL
 [qr-code-generator.com](https://www.qr-code-generator.com/) or
 [Google's own QR tool](https://qr.io/)) and print it on that property's sign.
 Each sign gets a different code pointing at its own listing.
+
+## Restricting the directory page
+
+The `/` directory (which lists and lets people search every property) can be
+put behind a simple username/password prompt, while every individual
+property page (`/<slug>`) stays completely open — that split matters since
+QR codes on signs need to work with no login at all, but you may not want
+anyone who finds your domain to be able to browse your whole portfolio.
+
+To turn it on, add two environment variables in Vercel (**Settings →
+Environment Variables**):
+- `DIRECTORY_USER` — any username you choose
+- `DIRECTORY_PASSWORD` — any password you choose
+
+Redeploy after adding them. Visiting `/` will now prompt for that
+username/password (a plain browser login popup, nothing to build or
+maintain); every `/<slug>` page is untouched and needs no login. Leaving
+either variable unset keeps the directory open — this fails open, not
+closed, so forgetting to set them never locks you out by accident.
 
 ## Abuse protection
 
@@ -200,3 +221,5 @@ limiter.
 - `app/api/chat/route.ts` — serverless route; holds the Gemini API key
   server-side, rate-limits requests, and calls Gemini with the listing as
   context
+- `middleware.ts` — optionally password-protects the `/` directory page
+  only; every `/<slug>` property page is untouched
