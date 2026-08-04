@@ -44,12 +44,27 @@ export default function ListingCard({ listing }: { listing: Listing }) {
           {secondaryStat && <p className="text-sm text-slate-500">{secondaryStat}</p>}
         </div>
 
+        {listing.brochureUrl && (
+          <a
+            href={listing.brochureUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-full bg-brand-navy px-4 py-2.5 text-center text-sm font-medium text-white"
+          >
+            <span aria-hidden>📄</span> View Property Brochure
+          </a>
+        )}
+
         {primaryAgent && (primaryAgent.phone || primaryAgent.email) && (
-          <div className="mt-3 flex gap-2">
+          <div className={`flex gap-2 ${listing.brochureUrl ? "mt-2" : "mt-3"}`}>
             {primaryAgent.phone && (
               <a
                 href={telHref(primaryAgent.phone)}
-                className="flex-1 rounded-full bg-brand-navy px-4 py-2.5 text-center text-sm font-medium text-white"
+                className={`flex-1 rounded-full px-4 py-2.5 text-center text-sm font-medium ${
+                  listing.brochureUrl
+                    ? "border border-brand-navy text-brand-navy"
+                    : "bg-brand-navy text-white"
+                }`}
               >
                 Call {primaryAgent.name.split(",")[0]}
               </a>
