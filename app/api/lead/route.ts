@@ -5,13 +5,14 @@ export const runtime = "nodejs";
 
 interface LeadRequest {
   name?: string;
+  company?: string;
   phone?: string;
   email?: string;
   listingAddress?: string;
   listingSlug?: string;
   // Hidden field real visitors never fill in — if it has a value, the
   // submission came from a bot and is silently dropped.
-  company?: string;
+  website?: string;
 }
 
 // Much stricter than /api/chat — a real visitor submits this at most once.
@@ -51,6 +52,7 @@ async function sendNotificationEmail(lead: LeadRequest) {
     replyTo: lead.email || undefined,
     subject: `New chatbot lead: ${lead.listingAddress || "unknown property"}`,
     text: `Name: ${lead.name || "(not given)"}
+Company: ${lead.company || "(not given)"}
 Phone: ${lead.phone || "(not given)"}
 Email: ${lead.email || "(not given)"}
 Property: ${lead.listingAddress || "(unknown)"}
@@ -66,6 +68,7 @@ async function appendToGoogleSheet(lead: LeadRequest) {
   const params = new URLSearchParams();
   const entries: [string | undefined, string | undefined][] = [
     [process.env.GOOGLE_FORM_ENTRY_NAME, lead.name],
+    [process.env.GOOGLE_FORM_ENTRY_COMPANY, lead.company],
     [process.env.GOOGLE_FORM_ENTRY_PHONE, lead.phone],
     [process.env.GOOGLE_FORM_ENTRY_EMAIL, lead.email],
     [process.env.GOOGLE_FORM_ENTRY_PROPERTY, lead.listingAddress],
@@ -89,7 +92,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
   }
 
-  if (body.company) {
+  if (body.website) {
     // Honeypot tripped — pretend success so bots don't learn to skip this field.
     return NextResponse.json({ ok: true });
   }
@@ -107,6 +110,7 @@ export async function POST(req: Request) {
 
   const lead: LeadRequest = {
     name,
+    company: body.company?.trim(),
     phone,
     email,
     listingAddress: body.listingAddress,
