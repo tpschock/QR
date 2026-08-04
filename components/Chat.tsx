@@ -44,6 +44,16 @@ export default function Chat({ listing }: { listing: Listing }) {
   const [retryMessages, setRetryMessages] = useState<ChatMessage[] | null>(null);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
+  const [leadFormOpen, setLeadFormOpen] = useState(false);
+  const [leadName, setLeadName] = useState("");
+  const [leadPhone, setLeadPhone] = useState("");
+  const [leadEmail, setLeadEmail] = useState("");
+  const [leadCompany, setLeadCompany] = useState(""); // honeypot — real visitors never fill this in
+  const [leadStatus, setLeadStatus] = useState<"idle" | "submitting" | "success" | "error">(
+    "idle"
+  );
+  const [leadError, setLeadError] = useState<string | null>(null);
+
   const listEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const stickToBottomRef = useRef(true);
@@ -224,6 +234,46 @@ export default function Chat({ listing }: { listing: Listing }) {
     if (retryMessages) postToApi(retryMessages);
   }
 
+  async function submitLead(e: React.FormEvent) {
+    e.preventDefault();
+    const name = leadName.trim();
+    const phone = leadPhone.trim();
+    const email = leadEmail.trim();
+
+    if (!name || (!phone && !email)) {
+      setLeadError("Please add your name and a phone number or email.");
+      return;
+    }
+
+    setLeadStatus("submitting");
+    setLeadError(null);
+
+    try {
+      const res = await fetch("/api/lead", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          phone,
+          email,
+          listingAddress: listing.address,
+          listingSlug: listing.slug,
+          company: leadCompany,
+        }),
+      });
+
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody.error || "Something went wrong.");
+      }
+
+      setLeadStatus("success");
+    } catch (err) {
+      setLeadStatus("error");
+      setLeadError(err instanceof Error ? err.message : "Something went wrong.");
+    }
+  }
+
   async function copyMessage(text: string, index: number) {
     try {
       await navigator.clipboard.writeText(text);
@@ -327,6 +377,75 @@ export default function Chat({ listing }: { listing: Listing }) {
         )}
         <div ref={listEndRef} />
       </div>
+
+      {leadStatus === "success" ? (
+        <div className="border-t border-slate-200 bg-slate-50 px-4 py-3 text-center text-sm text-slate-600">
+          Thanks — we&apos;ll be in touch soon.
+        </div>
+      ) : leadFormOpen ? (
+        <form
+          onSubmit={submitLead}
+          className="space-y-2 border-t border-slate-200 bg-slate-50 p-3"
+        >
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-medium text-slate-700">Request a call back</p>
+            <button
+              type="button"
+              onClick={() => setLeadFormOpen(false)}
+              className="text-xs text-slate-400"
+            >
+              Cancel
+            </button>
+          </div>
+          <input
+            type="text"
+            value={leadName}
+            onChange={(e) => setLeadName(e.target.value)}
+            placeholder="Your name"
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-navy"
+          />
+          <input
+            type="tel"
+            value={leadPhone}
+            onChange={(e) => setLeadPhone(e.target.value)}
+            placeholder="Phone"
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-navy"
+          />
+          <input
+            type="email"
+            value={leadEmail}
+            onChange={(e) => setLeadEmail(e.target.value)}
+            placeholder="Email"
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-navy"
+          />
+          <input
+            type="text"
+            value={leadCompany}
+            onChange={(e) => setLeadCompany(e.target.value)}
+            tabIndex={-1}
+            autoComplete="off"
+            aria-hidden="true"
+            className="absolute h-px w-px overflow-hidden opacity-0"
+            style={{ left: "-9999px" }}
+          />
+          {leadError && <p className="text-xs text-red-600">{leadError}</p>}
+          <button
+            type="submit"
+            disabled={leadStatus === "submitting"}
+            className="w-full rounded-lg bg-brand-navy px-3 py-2 text-sm font-medium text-white disabled:opacity-40"
+          >
+            {leadStatus === "submitting" ? "Sending…" : "Request call back"}
+          </button>
+        </form>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setLeadFormOpen(true)}
+          className="border-t border-slate-200 bg-white px-4 py-2 text-left text-sm text-brand-navy"
+        >
+          Want a call back? Share your contact info →
+        </button>
+      )}
 
       <form
         onSubmit={handleSubmit}
