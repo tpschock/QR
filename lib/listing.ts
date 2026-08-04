@@ -10,6 +10,7 @@ export interface Listing {
   city: string;
   listingStatus: string;
   photoUrl?: string;
+  brochureUrl?: string;
   buildingType?: string;
   buildingStatus?: string;
   leaseStructure?: string;
@@ -151,10 +152,14 @@ export function listingToContext(listing: Listing): string {
     ? `\n\nAdditional marketing details (from the property flier):\n${listing.notes}`
     : "";
 
+  const brochureLine = listing.brochureUrl
+    ? `\nBrochure: ${listing.brochureUrl}`
+    : "";
+
   return `Property listing details:
 Name/Address: ${listing.address}
 City: ${listing.city}
 Status: ${listing.listingStatus}
 ${fieldLines}
-Listing agent(s): ${agentLines}${notesSection}`;
+Listing agent(s): ${agentLines}${brochureLine}${notesSection}`;
 }
