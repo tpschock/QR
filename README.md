@@ -209,8 +209,8 @@ someone does fill it in (name + phone and/or email), it's sent to
 
 **Google Sheet logging** — every lead appended as a new row, no API key or
 Google Cloud setup needed:
-1. Create a new Google Form with four short-answer questions: Name, Phone,
-   Email, Property.
+1. Create a new Google Form with five short-answer questions: Name, Company,
+   Phone, Email, Property.
 2. In the form editor's **Responses** tab, click the green Sheets icon →
    **Create a new spreadsheet** — this links submissions to auto-append as
    rows there.
@@ -224,9 +224,10 @@ Google Cloud setup needed:
    - `GOOGLE_FORM_ACTION_URL` — the same form URL, but ending in
      `/formResponse` instead of `/viewform` (e.g.
      `https://docs.google.com/forms/d/e/FORM_ID/formResponse`)
-   - `GOOGLE_FORM_ENTRY_NAME`, `GOOGLE_FORM_ENTRY_PHONE`,
-     `GOOGLE_FORM_ENTRY_EMAIL`, `GOOGLE_FORM_ENTRY_PROPERTY` — the
-     `entry.XXXXXXX` value you matched to each field in step 3
+   - `GOOGLE_FORM_ENTRY_NAME`, `GOOGLE_FORM_ENTRY_COMPANY`,
+     `GOOGLE_FORM_ENTRY_PHONE`, `GOOGLE_FORM_ENTRY_EMAIL`,
+     `GOOGLE_FORM_ENTRY_PROPERTY` — the `entry.XXXXXXX` value you matched to
+     each field in step 3
 
 Leaving any of these unset just skips that delivery method — the form still
 works and shows visitors a "we'll be in touch" success message regardless,
