@@ -34,12 +34,17 @@ of a generic error.
 `Truck Court Depth (ft)`, `Traffic (per Day)`, `In-Place Rent (psf)`,
 `Building Size (SF)`, `Dock Height (ft)`, `Listing Status`
 
-Plus one optional column not part of the standard Salesforce report:
+Plus two optional columns not part of the standard Salesforce report:
 
 - `Photo URL` — a direct link to a photo of the property (e.g. hosted on
   Salesforce, Dropbox, or anywhere publicly accessible). If present, it's
   shown as a hero image at the top of the property page. Leave it blank (or
   omit the column) for properties with no photo yet — nothing breaks.
+- `Brochure URL` — a direct link to a property brochure/flier PDF (hosted
+  anywhere publicly accessible — Dropbox, Google Drive with link sharing
+  on, your own site, etc.). If present, it shows as the most prominent
+  button on the page, right under the price, above the Call/Email buttons.
+  Leave it blank for properties with no brochure yet.
 
 To refresh the site with current data:
 
@@ -180,6 +185,56 @@ maintain); every `/<slug>` page is untouched and needs no login. Leaving
 either variable unset keeps the directory open — this fails open, not
 closed, so forgetting to set them never locks you out by accident.
 
+## Capturing leads
+
+Every property page has a low-key "Want a call back? Share your contact
+info" option in the chat — entirely optional, never forced on visitors, so
+the chatbot stays frictionless for anyone who just wants information. When
+someone does fill it in (name + phone and/or email), it's sent to
+`/api/lead`, which can notify you two ways — set up either or both:
+
+**Email notification** — get an email each time someone leaves their info:
+1. If using Gmail/Google Workspace: Google Account → **Security → 2-Step
+   Verification** (must be on) → search **App Passwords** → create one for
+   "Mail" → copy the 16-character password. Other providers (Outlook,
+   Microsoft 365, GoDaddy, etc.) work the same way with their own SMTP
+   settings — check your provider's SMTP docs if not using Gmail.
+2. In Vercel, add:
+   - `SMTP_HOST` (e.g. `smtp.gmail.com`)
+   - `SMTP_PORT` (`465` for Gmail)
+   - `SMTP_USER` — the mailbox sending the notification
+   - `SMTP_PASSWORD` — the app password from step 1
+   - `LEAD_NOTIFICATION_EMAIL` — where the notification should land (can be
+     the same address as `SMTP_USER`, or a different office inbox)
+
+**Google Sheet logging** — every lead appended as a new row, no API key or
+Google Cloud setup needed:
+1. Create a new Google Form with four short-answer questions: Name, Phone,
+   Email, Property.
+2. In the form editor's **Responses** tab, click the green Sheets icon →
+   **Create a new spreadsheet** — this links submissions to auto-append as
+   rows there.
+3. Open the live form (not the editor) → **⋮ menu → Get pre-filled link**.
+   Type a distinct placeholder into each field (e.g. "NAME_TEST" into Name,
+   "PHONE_TEST" into Phone) → **Get link** → copy the URL it gives you. It
+   looks like `.../viewform?usp=pp_url&entry.123456=NAME_TEST&entry.789012=PHONE_TEST...`
+   — match each placeholder back to its `entry.XXXXXXX` number to know which
+   ID belongs to which field.
+4. In Vercel, add:
+   - `GOOGLE_FORM_ACTION_URL` — the same form URL, but ending in
+     `/formResponse` instead of `/viewform` (e.g.
+     `https://docs.google.com/forms/d/e/FORM_ID/formResponse`)
+   - `GOOGLE_FORM_ENTRY_NAME`, `GOOGLE_FORM_ENTRY_PHONE`,
+     `GOOGLE_FORM_ENTRY_EMAIL`, `GOOGLE_FORM_ENTRY_PROPERTY` — the
+     `entry.XXXXXXX` value you matched to each field in step 3
+
+Leaving any of these unset just skips that delivery method — the form still
+works and shows visitors a "we'll be in touch" success message regardless,
+so it's safe to set up one method now and the other later. `/api/lead` has
+its own stricter rate limit (5 submissions per visitor per hour) and a
+hidden honeypot field, since this one triggers real emails/rows rather than
+just an AI reply.
+
 ## Abuse protection
 
 `/api/chat` rate-limits requests per visitor (20 messages per 5 minutes) to
@@ -221,5 +276,7 @@ limiter.
 - `app/api/chat/route.ts` — serverless route; holds the Gemini API key
   server-side, rate-limits requests, and calls Gemini with the listing as
   context
+- `app/api/lead/route.ts` — serverless route for the optional "request a
+  call back" form; emails a notification and/or logs to a Google Sheet
 - `middleware.ts` — optionally password-protects the `/` directory page
   only; every `/<slug>` property page is untouched
