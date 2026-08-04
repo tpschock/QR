@@ -234,6 +234,20 @@ export default function Chat({ listing }: { listing: Listing }) {
     }
   }
 
+  // Keep offering suggestions for the rest of the conversation, not just the
+  // first turn — but only ones not already asked, and only between turns
+  // (once it's the visitor's turn again), not while a reply is streaming in.
+  const lastMessage = messages[messages.length - 1];
+  const alreadyAsked = new Set(
+    messages
+      .filter((m) => m.role === "user")
+      .map((m) => m.content.trim().toLowerCase())
+  );
+  const quickReplies =
+    !loading && lastMessage?.role === "assistant" && lastMessage.content !== ""
+      ? QUICK_REPLIES.filter((q) => !alreadyAsked.has(q.trim().toLowerCase()))
+      : [];
+
   return (
     <div className="flex min-h-0 flex-1 flex-col bg-white">
       <div
@@ -286,9 +300,9 @@ export default function Chat({ listing }: { listing: Listing }) {
           );
         })}
 
-        {messages.length === 1 && (
+        {quickReplies.length > 0 && (
           <div className="flex flex-wrap gap-2 pt-1">
-            {QUICK_REPLIES.map((q) => (
+            {quickReplies.map((q) => (
               <button
                 key={q}
                 type="button"
