@@ -119,6 +119,7 @@ function loadListings(): Listing[] {
         city: row.City?.trim() ?? "",
         listingStatus: row["Listing Status"]?.trim() ?? "",
         photoUrl: str(row["Photo URL"]),
+        brochureUrl: str(row["Brochure URL"]),
         buildingType: str(row["Building Type"]),
         buildingStatus: str(row["Building Status"]),
         leaseStructure: str(row["Lease Structure"]),
