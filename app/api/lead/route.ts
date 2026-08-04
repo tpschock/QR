@@ -57,7 +57,10 @@ Phone: ${lead.phone || "(not given)"}
 Email: ${lead.email || "(not given)"}
 Property: ${lead.listingAddress || "(unknown)"}
 Link: ${lead.listingSlug ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL || ""}/${lead.listingSlug}` : "(unknown)"}
-Submitted: ${new Date().toLocaleString()}`,
+Submitted: ${new Date().toLocaleString("en-US", {
+      timeZone: "America/Chicago",
+      timeZoneName: "short",
+    })}`,
   });
 }
 
