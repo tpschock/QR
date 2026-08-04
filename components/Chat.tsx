@@ -46,9 +46,10 @@ export default function Chat({ listing }: { listing: Listing }) {
 
   const [leadFormOpen, setLeadFormOpen] = useState(false);
   const [leadName, setLeadName] = useState("");
+  const [leadCompanyName, setLeadCompanyName] = useState("");
   const [leadPhone, setLeadPhone] = useState("");
   const [leadEmail, setLeadEmail] = useState("");
-  const [leadCompany, setLeadCompany] = useState(""); // honeypot — real visitors never fill this in
+  const [leadHoneypot, setLeadHoneypot] = useState(""); // real visitors never fill this in
   const [leadStatus, setLeadStatus] = useState<"idle" | "submitting" | "success" | "error">(
     "idle"
   );
@@ -254,11 +255,12 @@ export default function Chat({ listing }: { listing: Listing }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name,
+          company: leadCompanyName.trim(),
           phone,
           email,
           listingAddress: listing.address,
           listingSlug: listing.slug,
-          company: leadCompany,
+          website: leadHoneypot,
         }),
       });
 
@@ -405,6 +407,13 @@ export default function Chat({ listing }: { listing: Listing }) {
             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-navy"
           />
           <input
+            type="text"
+            value={leadCompanyName}
+            onChange={(e) => setLeadCompanyName(e.target.value)}
+            placeholder="Company (optional)"
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-navy"
+          />
+          <input
             type="tel"
             value={leadPhone}
             onChange={(e) => setLeadPhone(e.target.value)}
@@ -420,8 +429,8 @@ export default function Chat({ listing }: { listing: Listing }) {
           />
           <input
             type="text"
-            value={leadCompany}
-            onChange={(e) => setLeadCompany(e.target.value)}
+            value={leadHoneypot}
+            onChange={(e) => setLeadHoneypot(e.target.value)}
             tabIndex={-1}
             autoComplete="off"
             aria-hidden="true"
